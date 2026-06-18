@@ -3,20 +3,16 @@ const Submission = require("../models/Submission");
 
 const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select(
-      "-password"
-    );
+    const user = await User.findById(req.user.id).select("-password");
 
-    const totalSubmissions =
-      await Submission.countDocuments({
-        user: req.user.id,
-      });
+    const totalSubmissions = await Submission.countDocuments({
+      user: req.user.id,
+    });
 
-    const acceptedSolutions =
-      await Submission.countDocuments({
-        user: req.user.id,
-        status: "Accepted",
-      });
+    const acceptedSolutions = await Submission.countDocuments({
+      user: req.user.id,
+      status: "Accepted",
+    });
 
     res.json({
       name: user.name,
@@ -25,6 +21,8 @@ const getProfile = async (req, res) => {
       acceptedSolutions,
     });
   } catch (error) {
+    console.error("PROFILE ERROR:", error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -35,67 +33,56 @@ const getDashboard = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
-    const totalSubmissions =
-      await Submission.countDocuments({
-        user: req.user.id,
-      });
+    const totalSubmissions = await Submission.countDocuments({
+      user: req.user.id,
+    });
 
-    const acceptedSolutions =
-      await Submission.countDocuments({
-        user: req.user.id,
-        status: "Accepted",
-      });
+    const acceptedSolutions = await Submission.countDocuments({
+      user: req.user.id,
+      status: "Accepted",
+    });
 
-    const problemsSolved =
-      acceptedSolutions;
+    const problemsSolved = acceptedSolutions;
 
-    const leaderboard =
-      await Submission.aggregate([
-        {
-          $match: {
-            status: "Accepted",
+    const leaderboard = await Submission.aggregate([
+      {
+        $match: {
+          status: "Accepted",
+        },
+      },
+      {
+        $group: {
+          _id: "$user",
+          acceptedCount: {
+            $sum: 1,
           },
         },
-        {
-          $group: {
-            _id: "$user",
-            acceptedCount: {
-              $sum: 1,
-            },
-          },
+      },
+      {
+        $sort: {
+          acceptedCount: -1,
         },
-        {
-          $sort: {
-            acceptedCount: -1,
-          },
-        },
-      ]);
+      },
+    ]);
 
     let rank = "N/A";
 
-    const userIndex =
-      leaderboard.findIndex(
-        (item) =>
-          item._id.toString() ===
-          req.user.id
-      );
+    const userIndex = leaderboard.findIndex(
+      (item) => item._id.toString() === req.user.id
+    );
 
     if (userIndex !== -1) {
       rank = userIndex + 1;
     }
 
-    const recentSubmissions =
-      await Submission.find({
-        user: req.user.id,
+    const recentSubmissions = await Submission.find({
+      user: req.user.id,
+    })
+      .populate("problem", "title")
+      .sort({
+        createdAt: -1,
       })
-        .populate(
-          "problem",
-          "title"
-        )
-        .sort({
-          createdAt: -1,
-        })
-        .limit(5);
+      .limit(5);
 
     res.json({
       name: user.name,
@@ -107,6 +94,8 @@ const getDashboard = async (req, res) => {
       recentSubmissions,
     });
   } catch (error) {
+    console.error("DASHBOARD ERROR:", error);
+
     res.status(500).json({
       message: error.message,
     });

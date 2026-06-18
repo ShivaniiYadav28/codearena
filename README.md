@@ -45,7 +45,7 @@ CodeArena is a full-stack coding platform inspired by LeetCode.
 ## Live Demo
 
 Frontend:
-PASTE_YOUR_FRONTEND_LINK_HERE
+https://codearena-frontend-v3m0.onrender.com
 
 Backend:
 https://codearena-1wri.onrender.com

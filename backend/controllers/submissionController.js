@@ -7,7 +7,7 @@ const createSubmission = async (req, res) => {
     console.log("REQ USER:", req.user);
     console.log("REQ BODY:", req.body);
 
-    const { problem, code, language } = req.body;
+    const { problem, code, language, status } = req.body;
 
     if (!req.user) {
       return res.status(401).json({
@@ -23,12 +23,6 @@ const createSubmission = async (req, res) => {
       });
     }
 
-    let status = "Accepted";
-
-    if (!code || code.trim().length < 10) {
-      status = "Wrong Answer";
-    }
-
     const submission = await Submission.create({
       user: req.user.id,
       problem,
@@ -37,11 +31,17 @@ const createSubmission = async (req, res) => {
       status,
     });
 
-    console.log("SUBMISSION SAVED:", submission._id);
+    console.log(
+      "SUBMISSION SAVED:",
+      submission._id
+    );
 
     res.status(201).json(submission);
   } catch (error) {
-    console.error("SUBMISSION ERROR:", error);
+    console.error(
+      "SUBMISSION ERROR:",
+      error
+    );
 
     res.status(500).json({
       message: error.message,
@@ -59,17 +59,23 @@ const getSubmissions = async (req, res) => {
 
     res.json(submissions);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       message: error.message,
     });
   }
 };
 
-const getSubmissionById = async (req, res) => {
+const getSubmissionById = async (
+  req,
+  res
+) => {
   try {
-    const submission = await Submission.findById(
-      req.params.id
-    ).populate("problem");
+    const submission =
+      await Submission.findById(
+        req.params.id
+      ).populate("problem");
 
     if (!submission) {
       return res.status(404).json({
@@ -79,56 +85,64 @@ const getSubmissionById = async (req, res) => {
 
     res.json(submission);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       message: error.message,
     });
   }
 };
 
-const getLeaderboard = async (req, res) => {
+const getLeaderboard = async (
+  req,
+  res
+) => {
   try {
-    const leaderboard = await Submission.aggregate([
-      {
-        $match: {
-          status: "Accepted",
-          user: { $ne: null },
-        },
-      },
-      {
-        $group: {
-          _id: "$user",
-          acceptedCount: {
-            $sum: 1,
+    const leaderboard =
+      await Submission.aggregate([
+        {
+          $match: {
+            status: "Accepted",
+            user: { $ne: null },
           },
         },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "user",
+        {
+          $group: {
+            _id: "$user",
+            acceptedCount: {
+              $sum: 1,
+            },
+          },
         },
-      },
-      {
-        $unwind: "$user",
-      },
-      {
-        $project: {
-          acceptedCount: 1,
-          name: "$user.name",
-          email: "$user.email",
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "user",
+          },
         },
-      },
-      {
-        $sort: {
-          acceptedCount: -1,
+        {
+          $unwind: "$user",
         },
-      },
-    ]);
+        {
+          $project: {
+            acceptedCount: 1,
+            name: "$user.name",
+            email: "$user.email",
+          },
+        },
+        {
+          $sort: {
+            acceptedCount: -1,
+          },
+        },
+      ]);
 
     res.json(leaderboard);
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       message: error.message,
     });

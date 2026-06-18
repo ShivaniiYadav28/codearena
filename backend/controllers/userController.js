@@ -33,6 +33,12 @@ const getDashboard = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
     const totalSubmissions = await Submission.countDocuments({
       user: req.user.id,
     });
@@ -48,6 +54,7 @@ const getDashboard = async (req, res) => {
       {
         $match: {
           status: "Accepted",
+          user: { $ne: null },
         },
       },
       {
@@ -68,7 +75,9 @@ const getDashboard = async (req, res) => {
     let rank = "N/A";
 
     const userIndex = leaderboard.findIndex(
-      (item) => item._id.toString() === req.user.id
+      (item) =>
+        item._id &&
+        item._id.toString() === req.user.id
     );
 
     if (userIndex !== -1) {

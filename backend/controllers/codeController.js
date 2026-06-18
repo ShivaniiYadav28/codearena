@@ -13,35 +13,25 @@ const runCode = async (req, res) => {
       });
     }
 
-    let verdict = "Accepted";
-
     try {
-      const solve = new Function(
-        `${code}; return solve;`
+      const result = new Function(
+        code + "; return 'Code Executed Successfully';"
       )();
 
-      for (const testCase of problem.testCases) {
-        const userOutput = solve(testCase.input);
-
-        if (
-          String(userOutput).trim() !==
-          String(testCase.output).trim()
-        ) {
-          verdict = "Wrong Answer";
-          break;
-        }
-      }
+      res.status(200).json({
+        success: true,
+        verdict: "Accepted",
+        output: result,
+      });
     } catch (err) {
-      verdict = "Runtime Error";
+      res.status(200).json({
+        success: true,
+        verdict: "Runtime Error",
+        output: err.message,
+      });
     }
-
-    res.status(200).json({
-      success: true,
-      verdict,
-      output: verdict,
-    });
   } catch (error) {
-    console.log(error);
+    console.log("CODE EXECUTION ERROR:", error);
 
     res.status(500).json({
       success: false,

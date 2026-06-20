@@ -31,17 +31,6 @@ CodeArena is a full-stack coding platform inspired by LeetCode.
 - MongoDB
 - JWT Authentication
 
-## Screenshots
-
-### Dashboard
-(Add screenshot here)
-
-### Problem Solving
-(Add screenshot here)
-
-### Leaderboard
-(Add screenshot here)
-
 ## Live Demo
 
 Frontend:
